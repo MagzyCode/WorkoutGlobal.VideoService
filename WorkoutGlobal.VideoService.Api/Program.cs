@@ -1,8 +1,22 @@
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 using WorkoutGlobal.VideoService.Api.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
+// using deprecated AddFluentValidation method for auto validation
+builder.Services.AddControllers()
+    .AddFluentValidation(configuration =>
+    {
+        configuration.RegisterValidatorsFromAssemblyContaining<Program>();
+        configuration.DisableDataAnnotationsValidation = true;
+    });
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.ConfigureAttributes();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(setupAction =>

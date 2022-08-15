@@ -1,19 +1,15 @@
 ﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using WorkoutGlobal.VideoService.Api.Contracts;
 
-namespace WorkoutGlobal.VideoService.Api.Models
+namespace WorkoutGlobal.VideoService.Api.Models.Dtos
 {
-    
     /// <summary>
-    /// Represents model of video files.
+    /// Represents video DTO model for GET method.
     /// </summary>
-    public class Video : IModel
+    public class VideoDto
     {
         /// <summary>
         /// Unique identifier of video.
         /// </summary>
-        [BsonId]
         public ObjectId Id { get; set; }
 
         /// <summary>
@@ -27,13 +23,13 @@ namespace WorkoutGlobal.VideoService.Api.Models
         public string Description { get; set; }
 
         /// <summary>
-        /// Video file name.
+        /// Video file name;
         /// </summary>
         public string FileName { get; set; }
 
         /// <summary>
-        /// Identifier of video in GridFS.
+        /// Video file in bytes.
         /// </summary>
-        public ObjectId GridFsId { get; set; }
+        public byte[] ImageFile { get; set; }
     }
 }

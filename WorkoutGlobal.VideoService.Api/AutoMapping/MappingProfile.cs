@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using WorkoutGlobal.VideoService.Api.Models;
+using WorkoutGlobal.VideoService.Api.Models.Dtos;
 
 namespace WorkoutGlobal.VideoService.Api.AutoMapping
 {
@@ -12,7 +14,8 @@ namespace WorkoutGlobal.VideoService.Api.AutoMapping
         /// </summary>
         public MappingProfile()
         {
-
+            CreateMap<Video, VideoDto>();
+            CreateMap<CreationVideoDto, Video>();
         }
     }
 }
