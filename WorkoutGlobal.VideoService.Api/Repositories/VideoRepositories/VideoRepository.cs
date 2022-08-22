@@ -15,7 +15,7 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         /// <param name="configuration">Project configuration.</param>
         /// <param name="collectionName">Base collection name.</param>
         public VideoRepository(IConfiguration configuration, string collectionName = "Videos")
-            : base(configuration, collectionName )
+            : base(configuration, collectionName)
         {   }
 
         /// <summary>
@@ -32,7 +32,6 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
             if (videoFile is null)
                 throw new ArgumentNullException(nameof(videoFile), "Video file cannot be null");
             
-
             using var binaryReader = new BinaryReader(videoFile.OpenReadStream());
             var videoData = binaryReader.ReadBytes((int)videoFile.Length);
 

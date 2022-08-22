@@ -26,7 +26,7 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         {
             Configuration = configuration;
 
-            var client = new MongoClient(Configuration.GetConnectionString("MongoDbVideoServiceConnectionString"));
+            var client = new MongoClient(Configuration["ConnectionStrings:MongoDbVideoServiceConnectionString"]);
             Database = client.GetDatabase(Configuration["MongoDbConnection:DatabaseName"]);
 
             CollectionName = collectionName;

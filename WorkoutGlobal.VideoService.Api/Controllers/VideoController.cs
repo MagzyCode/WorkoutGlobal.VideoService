@@ -134,7 +134,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         /// <summary>
         /// Update video.
         /// </summary>
-        /// <param name="creationVideoDto">Updation model.</param>
+        /// <param name="updationVideoDto">Updation model.</param>
         /// <returns></returns>
         /// <response code="204">Video was successfully deleted.</response>
         /// <response code="400">Incoming model isn't valid.</response>
@@ -144,9 +144,9 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateVideo([FromBody] UpdationVideoDto creationVideoDto)
+        public async Task<IActionResult> UpdateVideo([FromBody] UpdationVideoDto updationVideoDto)
         {
-            var video = Mapper.Map<Video>(creationVideoDto);
+            var video = Mapper.Map<Video>(updationVideoDto);
 
             await VideoRepository.UpdateVideoAsync(video);
 
@@ -174,7 +174,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
                     Message = "Video id is empty.",
-                    Details = "Video id cannot be empty for find action."
+                    Details = "Video id cannot be empty for delete action."
                 });
 
             var video = await VideoRepository.GetVideoAsync(id);
