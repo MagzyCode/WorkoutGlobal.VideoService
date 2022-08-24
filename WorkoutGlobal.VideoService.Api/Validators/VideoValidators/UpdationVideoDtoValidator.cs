@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using WorkoutGlobal.VideoService.Api.Models.Dtos;
 
-namespace WorkoutGlobal.VideoService.Api.Validators.VideoValidators
+namespace WorkoutGlobal.VideoService.Api.Validators
 {
     /// <summary>
     /// Validator for updation video DTO model.

@@ -21,17 +21,25 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         /// Ctor for base repository.
         /// </summary>
         /// <param name="configuration">Project configuration.</param>
-        /// <param name="collectionName">Default collection name.</param>
-        public BaseRepository(IConfiguration configuration, string collectionName)
+        public BaseRepository(IConfiguration configuration)
         {
             Configuration = configuration;
 
             var client = new MongoClient(Configuration["ConnectionStrings:MongoDbVideoServiceConnectionString"]);
-            Database = client.GetDatabase(Configuration["MongoDbConnection:DatabaseName"]);
 
-            CollectionName = collectionName;
-
+            Database = client.GetDatabase(Configuration["MongoDbConnection:DatabaseName"]); 
             GridFSBucket = new GridFSBucket(Database);
+        }
+
+        /// <summary>
+        /// Ctor for base repository.
+        /// </summary>
+        /// <param name="configuration">Project configuration.</param>
+        /// <param name="collectionName">Default collection name.</param>
+        public BaseRepository(IConfiguration configuration, string collectionName)
+            : this(configuration)
+        {
+            CollectionName = collectionName;
         }
 
         /// <summary>
@@ -76,64 +84,94 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         }
 
         /// <summary>
-        /// Gerenal creation of new model.
+        /// Creation of new model in collection.
         /// </summary>
         /// <param name="model">Creation model.</param>
-        /// <returns>A task that represents asynchronous Create operation.</returns>
-        public async Task<ObjectId> CreateAsync(TModel model)
+        /// <param name="collectionName">Collection name.</param>
+        /// <returns>Returns generated id for created model.</returns>
+        public async Task<ObjectId> CreateAsync(TModel model, string collectionName)
         {
-            await Database.GetCollection<TModel>(CollectionName).InsertOneAsync(model);
+            await Database.GetCollection<TModel>(collectionName).InsertOneAsync(model);
 
             return model.Id;
         }
 
         /// <summary>
+        /// Creation of new model in collection. Selected collection base on property CollectionName.
+        /// </summary>
+        /// <param name="model">Creation model.</param>
+        /// <returns>A task that represents asynchronous Create operation.</returns>
+        public async Task<ObjectId> CreateAsync(TModel model)
+        {
+            return await CreateAsync(model, CollectionName);
+        }
+
+        /// <summary>
         /// Gerenal deletion of existed model.
         /// </summary>
-        /// <param name="id">Deleting model.</param>
-        public async Task DeleteAsync(ObjectId id)
+        /// <param name="id">Deleting model id.</param>
+        /// <param name="collectionName">Collection name.</param>
+        /// <returns></returns>
+        public async Task DeleteAsync(ObjectId id, string collectionName)
         {
             var filter = Builders<TModel>.Filter.Eq("_id", id);
 
-            await Database.GetCollection<TModel>(CollectionName).DeleteOneAsync(filter);
+            await Database.GetCollection<TModel>(collectionName).DeleteOneAsync(filter);
+        }
+
+        /// <summary>
+        /// Gerenal deletion of existed model. Selected collection base on property CollectionName.
+        /// </summary>
+        /// <param name="id">Deleting model id.</param>
+        public async Task DeleteAsync(ObjectId id)
+        {
+            await DeleteAsync(id, CollectionName);
         }
 
         /// <summary>
         /// General getting of all models.
         /// </summary>
+        /// <param name="collectionName"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<TModel>> GetAllAsync(string collectionName)
+        {
+            var models = await Database.GetCollection<TModel>(collectionName).FindAsync(_ => true);
+
+            return await models.ToListAsync();
+        }
+
+        /// <summary>
+        /// General getting of all models. Selected collection base on property CollectionName.
+        /// </summary>
         /// <returns>IQueryable list of models.</returns>
         public async Task<IEnumerable<TModel>> GetAllAsync()
         {
-            var models = await Database.GetCollection<TModel>(CollectionName).FindAsync(_ => true);
-
-            return await models.ToListAsync();
+            return await GetAllAsync(CollectionName);
         }
 
         /// <summary>
         /// Gerenal getting of single model by id.
         /// </summary>
         /// <param name="id">Model id.</param>
-        /// <returns>Existed model.</returns>
-        public async Task<TModel> GetModelAsync(ObjectId id)
+        /// <param name="collectionName">Collection name.</param>
+        /// <returns></returns>
+        public async Task<TModel> GetModelAsync(ObjectId id, string collectionName)
         {
             var filter = Builders<TModel>.Filter.Eq("_id", id);
 
-            var result = await Database.GetCollection<TModel>(CollectionName).FindAsync(filter);
+            var result = await Database.GetCollection<TModel>(collectionName).FindAsync(filter);
 
             return result.FirstOrDefault();
         }
 
         /// <summary>
-        /// General update action for existed model.
+        /// Gerenal getting of single model by id. Selected collection base on property CollectionName.
         /// </summary>
-        /// <param name="model">Updated model.</param>
-        public async Task UpdateAsync(TModel model)
+        /// <param name="id">Model id.</param>
+        /// <returns>Existed model.</returns>
+        public async Task<TModel> GetModelAsync(ObjectId id)
         {
-            var filter = Builders<TModel>.Filter.Eq("_id", model.Id);
-
-            await Database.GetCollection<TModel>(CollectionName).ReplaceOneAsync(
-                filter: filter,
-                replacement: model);
+            return await GetModelAsync(id, CollectionName);
         }
 
         /// <summary>

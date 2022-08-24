@@ -140,7 +140,7 @@ namespace WorkoutGlobal.VideoService.Api.IntegrationTests.Controllers
             // assert
             result.Should().NotBeNull();
             result.Should().BeOfType<List<VideoDto>>();
-            result.Count.Should().Be(1);
+            result.Count.Should().BeGreaterThanOrEqualTo(1);
         }
 
         [Fact]
@@ -172,7 +172,7 @@ namespace WorkoutGlobal.VideoService.Api.IntegrationTests.Controllers
         public async Task UpdateVideo_NullDtoModel_ReturnBadRequestResult()
         {
             // arrange
-            UpdationVideoDto? updationVideoDto = null;
+            UpdationVideoDto updationVideoDto = null;
 
             // act
             var updateResponse = await _appTestConnection.AppClient.PutAsJsonAsync($"api/videos/{ObjectId.Empty}", updationVideoDto);

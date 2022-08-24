@@ -31,17 +31,27 @@ namespace WorkoutGlobal.VideoService.Api.Contracts
         public IGridFSBucket GridFSBucket { get; }
 
         /// <summary>
+        /// Creation of new model in collection. Selected collection base on property CollectionName.
+        /// </summary>
+        /// <param name="model">Creation model.</param>
+        /// <param name="collectionName">Collection name.</param>
+        /// <returns>A task that represents asynchronous Create operation.</returns>
+        public Task<ObjectId> CreateAsync(TModel model, string collectionName);
+
+        /// <summary>
         /// Gerenal creation of new model.
         /// </summary>
         /// <param name="model">Creation model.</param>
-        /// <returns>A task that represents asynchronous Create operation.</returns>
+        /// <returns>Returns generated id for created model.</returns>
         public Task<ObjectId> CreateAsync(TModel model);
 
         /// <summary>
-        /// General update action for existed model.
+        /// Gerenal deletion of existed model.
         /// </summary>
-        /// <param name="model">Updated model.</param>
-        public Task UpdateAsync(TModel model);
+        /// <param name="id">Deleting model id.</param>
+        /// <param name="collectionName">Collection name.</param>
+        /// <returns></returns>
+        public Task DeleteAsync(ObjectId id, string collectionName);
 
         /// <summary>
         /// Gerenal deletion of existed model.
@@ -52,8 +62,23 @@ namespace WorkoutGlobal.VideoService.Api.Contracts
         /// <summary>
         /// General getting of all models.
         /// </summary>
+        /// <param name="collectionName"></param>
+        /// <returns></returns>
+        public Task<IEnumerable<TModel>> GetAllAsync(string collectionName);
+
+        /// <summary>
+        /// General getting of all models.
+        /// </summary>
         /// <returns>IQueryable list of models.</returns>
         public Task<IEnumerable<TModel>> GetAllAsync();
+
+        /// <summary>
+        /// Gerenal getting of single model by id.
+        /// </summary>
+        /// <param name="id">Model id.</param>
+        /// <param name="collectionName">Collection name.</param>
+        /// <returns></returns>
+        public Task<TModel> GetModelAsync(ObjectId id, string collectionName);
 
         /// <summary>
         /// Gerenal getting of single model by id.
