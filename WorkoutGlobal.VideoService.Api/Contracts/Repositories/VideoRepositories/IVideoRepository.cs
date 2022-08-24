@@ -27,7 +27,7 @@ namespace WorkoutGlobal.VideoService.Api.Contracts
         /// <param name="creationVideo">Creation video model.</param>
         /// <param name="videoFile">Loaded video file.</param>
         /// <returns>Returns generated id for creation video.</returns>
-        public Task<ObjectId> CreateVideoAsync(Video creationVideo, IFormFile videoFile);
+        public Task<ObjectId> CreateVideoAsync(Video creationVideo, byte[] videoFile);
 
         /// <summary>
         /// Update video.
@@ -42,5 +42,12 @@ namespace WorkoutGlobal.VideoService.Api.Contracts
         /// <param name="deletionId">Deletion video id.</param>
         /// <returns></returns>
         public Task DeleteVideoAsync(ObjectId deletionId);
+
+        /// <summary>
+        /// Get file by id.
+        /// </summary>
+        /// <param name="id">,File id.</param>
+        /// <returns>Returns bytes of file.</returns>
+        public Task<byte[]> GetVideoFileAsync(ObjectId id);
     }
 }

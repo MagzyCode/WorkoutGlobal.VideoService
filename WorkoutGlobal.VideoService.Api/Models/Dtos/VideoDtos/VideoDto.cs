@@ -30,6 +30,6 @@ namespace WorkoutGlobal.VideoService.Api.Models.Dtos
         /// <summary>
         /// Video file in bytes.
         /// </summary>
-        public byte[] ImageFile { get; set; }
+        public byte[] VideoFile { get; set; }
     }
 }

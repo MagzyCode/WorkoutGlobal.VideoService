@@ -14,6 +14,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
     /// </summary>
     [Route("api/videos")]
     [ApiController]
+    [Produces("application/json")]
     public class VideoController : ControllerBase
     {
         private IVideoRepository _videoRepository;
@@ -66,17 +67,17 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status404NotFound)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetVideo(ObjectId id)
+        public async Task<IActionResult> GetVideo(string id)
         {
-            if (id == ObjectId.Empty)
+            if (!ObjectId.TryParse(id, out var parsedId) || parsedId == ObjectId.Empty)
                 return BadRequest(new ErrorDetails()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
-                    Message = "Video id is empty.",
-                    Details = "Video id cannot be empty for find action."
+                    Message = "Video id is invalid.",
+                    Details = "Video id cannot be empty for GET action."
                 });
 
-            var video = await VideoRepository.GetVideoAsync(id);
+            var video = await VideoRepository.GetVideoAsync(parsedId);
 
             if (video is null)
                 return NotFound(new ErrorDetails()
@@ -87,6 +88,8 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
                 });
 
             var videoDto = Mapper.Map<VideoDto>(video);
+
+            videoDto.VideoFile = await VideoRepository.GetVideoFileAsync(parsedId);
 
             return Ok(videoDto);
         }
@@ -104,9 +107,12 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         {
             var videos = await VideoRepository.GetAllVideosAsync();
 
-            var videoDto = Mapper.Map<IEnumerable<VideoDto>>(videos);
+            var videosDto = Mapper.Map<IEnumerable<VideoDto>>(videos);
 
-            return Ok(videoDto);
+            foreach (var videoDto in videosDto)
+                videoDto.VideoFile = await VideoRepository.GetVideoFileAsync(videoDto.Id);
+
+            return Ok(videosDto);
         }
 
         /// <summary>
@@ -128,25 +134,47 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
 
             var createdVideoId = await VideoRepository.CreateVideoAsync(video, creationVideoDto.VideoFile);
 
-            return Created($"api/videos/{createdVideoId}", createdVideoId);
+            return Created($"api/videos/{createdVideoId}", createdVideoId.ToString());
         }
 
+        // TODO: Нужно полностью пересмотреть концепцию обновления, потому что ничего не понятно
+        // как это сделать правильно
         /// <summary>
         /// Update video.
         /// </summary>
+        /// <param name="id">Updation model id.</param>
         /// <param name="updationVideoDto">Updation model.</param>
         /// <returns></returns>
         /// <response code="204">Video was successfully deleted.</response>
         /// <response code="400">Incoming model isn't valid.</response>
         /// <response code="500">Something going wrong on server.</response>
-        [HttpPut]
+        [HttpPut("{id}")]
         [ModelValidationFilter]
         [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateVideo([FromBody] UpdationVideoDto updationVideoDto)
+        public async Task<IActionResult> UpdateVideo(string id, [FromBody] UpdationVideoDto updationVideoDto)
         {
-            var video = Mapper.Map<Video>(updationVideoDto);
+            if (!ObjectId.TryParse(id, out var parsedId) || parsedId == ObjectId.Empty)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Video id is invalid.",
+                    Details = "Video id cannot be empty for UPDATE action."
+                });
+
+            var video = await VideoRepository.GetVideoAsync(parsedId);
+
+            if (video is null)
+                return NotFound(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Message = "Video not exists.",
+                    Details = "Video with given id not found in system."
+                });
+
+            video = Mapper.Map<Video>(updationVideoDto);
+            video.Id = parsedId;
 
             await VideoRepository.UpdateVideoAsync(video);
 
@@ -162,14 +190,14 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         /// <response code="400">Incoming id isn't valid.</response>
         /// <response code="404">Video with given is not found on server.</response>
         /// <response code="500">Something going wrong on server.</response>
-        [HttpDelete]
+        [HttpDelete("{id}")]
         [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status404NotFound)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DeleteVideo(ObjectId id)
+        public async Task<IActionResult> DeleteVideo(string id)
         {
-            if (id == ObjectId.Empty)
+            if (!ObjectId.TryParse(id, out var parsedId) || parsedId == ObjectId.Empty)
                 return BadRequest(new ErrorDetails()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
@@ -177,7 +205,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
                     Details = "Video id cannot be empty for delete action."
                 });
 
-            var video = await VideoRepository.GetVideoAsync(id);
+            var video = await VideoRepository.GetVideoAsync(parsedId);
 
             if (video is null)
                 return NotFound(new ErrorDetails()
@@ -187,7 +215,42 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
                     Details = "Video with given id not found in system."
                 });
 
-            await VideoRepository.DeleteVideoAsync(id);
+            await VideoRepository.DeleteVideoAsync(parsedId);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Purge database after tests.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpDelete("purge/{id}")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [ProducesResponseType(statusCode: StatusCodes.Status204NoContent)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status404NotFound)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Purge(string id)
+        {
+            if (!ObjectId.TryParse(id, out var parsedId) || parsedId == ObjectId.Empty)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Video id is empty.",
+                    Details = "Video id cannot be empty for delete action."
+                });
+ 
+            var video = await VideoRepository.GetVideoAsync(parsedId);
+
+            if (video is null)
+                return NotFound(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status404NotFound,
+                    Message = "Video not exists.",
+                    Details = "Video with given id not found in system."
+                });
+
+            await VideoRepository.DeleteVideoAsync(parsedId);
 
             return NoContent();
         }

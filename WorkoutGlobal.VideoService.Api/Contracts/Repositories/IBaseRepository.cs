@@ -69,5 +69,12 @@ namespace WorkoutGlobal.VideoService.Api.Contracts
         /// <param name="videoFile">Video file data.</param>
         /// <returns>Returns generated id for file.</returns>
         public Task<ObjectId> AddFileAsync(string videoName, byte[] videoFile);
+
+        /// <summary>
+        /// Get file by id.
+        /// </summary>
+        /// <param name="id">,File id.</param>
+        /// <returns>Returns bytes of file.</returns>
+        public Task<byte[]> GetFileAsync(ObjectId id);
     }
 }

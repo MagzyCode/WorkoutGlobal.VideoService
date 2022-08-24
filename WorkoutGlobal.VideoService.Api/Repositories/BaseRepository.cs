@@ -148,5 +148,17 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
 
             return createdId;
         }
+
+        /// <summary>
+        /// Get file by id.
+        /// </summary>
+        /// <param name="id">,File id.</param>
+        /// <returns>Returns bytes of file.</returns>
+        public async Task<byte[]> GetFileAsync(ObjectId id)
+        {
+            var result = await GridFSBucket.DownloadAsBytesAsync(id);
+
+            return result;
+        }
     }
 }

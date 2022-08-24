@@ -1,6 +1,8 @@
 ﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using WorkoutGlobal.VideoService.Api.Contracts;
 using WorkoutGlobal.VideoService.Api.Models;
+using static MongoDB.Driver.WriteConcern;
 
 namespace WorkoutGlobal.VideoService.Api.Repositories
 {
@@ -24,20 +26,17 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         /// <param name="creationVideo">Creation video model.</param>
         /// <param name="videoFile">Loaded video file.</param>
         /// <returns>Returns generated id for creation video.</returns>
-        public async Task<ObjectId> CreateVideoAsync(Video creationVideo, IFormFile videoFile)
+        public async Task<ObjectId> CreateVideoAsync(Video creationVideo, byte[] videoFile)
         {
             if (creationVideo is null)
                 throw new ArgumentNullException(nameof(creationVideo), "Video model cannot be null");
 
-            if (videoFile is null)
+            if (videoFile is null || videoFile.Length == 0)
                 throw new ArgumentNullException(nameof(videoFile), "Video file cannot be null");
-            
-            using var binaryReader = new BinaryReader(videoFile.OpenReadStream());
-            var videoData = binaryReader.ReadBytes((int)videoFile.Length);
-
+          
             var createdGridFSId = await AddFileAsync(
                 videoName: creationVideo.FileName,
-                videoFile: videoData);
+                videoFile: videoFile);
 
             creationVideo.GridFsId = createdGridFSId;
             var createdId = await CreateAsync(creationVideo);
@@ -52,6 +51,10 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         /// <returns></returns>
         public async Task DeleteVideoAsync(ObjectId deletionId)
         {
+            var deletedVideo = await GetVideoAsync(deletionId);
+
+            await GridFSBucket.DeleteAsync(deletedVideo.GridFsId);
+
             await DeleteAsync(deletionId);
         }
 
@@ -79,6 +82,20 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         }
 
         /// <summary>
+        /// Get video file by video id.
+        /// </summary>
+        /// <param name="id">Video file id.</param>
+        /// <returns>Return bytes of video file.</returns>
+        public async Task<byte[]> GetVideoFileAsync(ObjectId id)
+        {
+            var video = await GetVideoAsync(id);
+
+            var resultFile = await GetFileAsync(video.GridFsId);
+
+            return resultFile;
+        }
+
+        /// <summary>
         /// Update video.
         /// </summary>
         /// <param name="updationVideo">Updation video model.</param>
@@ -86,9 +103,18 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         public async Task UpdateVideoAsync(Video updationVideo)
         {
             if (updationVideo is null)
-                throw new ArgumentNullException(nameof(updationVideo), "Video model cannot be null");
+                throw new ArgumentNullException(nameof(updationVideo), "Updation video cannot be null.");
 
-            await UpdateAsync(updationVideo);
+            var filter = Builders<Video>.Filter.Eq("_id", updationVideo.Id);
+
+            var update = Builders<Video>.Update
+                .Set(video => video.Title, updationVideo.Title)
+                .Set(video => video.Description, updationVideo.Description)
+                .Set(video => video.FileName, updationVideo.FileName);
+
+            await Database.GetCollection<Video>(CollectionName).UpdateOneAsync(
+                filter: filter,
+                update: update);
         }
     }
 }

@@ -16,6 +16,7 @@ namespace WorkoutGlobal.VideoService.Api.AutoMapping
         {
             CreateMap<Video, VideoDto>();
             CreateMap<CreationVideoDto, Video>();
+            CreateMap<UpdationVideoDto, Video>();
         }
     }
 }

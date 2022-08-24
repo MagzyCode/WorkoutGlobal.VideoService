@@ -29,7 +29,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
                 .Setup(x => x.GetVideoAsync(It.IsAny<ObjectId>()))
                 .ReturnsAsync(new Video());
             _videoRepositoryMock
-                .Setup(x => x.CreateVideoAsync(It.IsAny<Video>(), It.IsAny<IFormFile>()))
+                .Setup(x => x.CreateVideoAsync(It.IsAny<Video>(), It.IsAny<byte[]>()))
                 .ReturnsAsync(ObjectId.Empty);
             _videoRepositoryMock
                 .Setup(x => x.UpdateVideoAsync(It.IsAny<Video>()));            
@@ -60,7 +60,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
         public async Task GetVideo_InvalidId_ReturnBadRequestResult()
         {
             // arrange
-            var id = ObjectId.Empty;
+            var id = ObjectId.Empty.ToString();
 
             // act 
             var result = await _videoController.GetVideo(id);
@@ -75,8 +75,8 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
             
             var error = badRequestResult.Value.As<ErrorDetails>();
             error.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
-            error.Message.Should().Be("Video id is empty.");
-            error.Details.Should().Be("Video id cannot be empty for find action.");
+            error.Message.Should().Be("Video id is invalid.");
+            error.Details.Should().Be("Video id cannot be empty for GET action.");
         }
 
         [Fact]
@@ -88,7 +88,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
                 .Setup(x => x.GetVideoAsync(id)); 
 
             // act 
-            var result = await _videoController.GetVideo(id);
+            var result = await _videoController.GetVideo(id.ToString());
 
             // assert
             result.Should().NotBeNull();
@@ -108,7 +108,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
         public async Task GetVideo_ModelExists_ReturnNotFoundResult()
         {
             // arrange
-            var id = ObjectId.GenerateNewId();
+            var id = ObjectId.GenerateNewId().ToString();
 
             // act 
             var result = await _videoController.GetVideo(id);
@@ -157,8 +157,8 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
 
             var createdResult = result.As<CreatedResult>();
             createdResult.Value.Should().NotBeNull();
-            createdResult.Value.Should().BeOfType<ObjectId>();
-            createdResult.Value.Should().Be(ObjectId.Empty);
+            createdResult.Value.Should().BeOfType<string>();
+            createdResult.Value.Should().Be(ObjectId.Empty.ToString());
             createdResult.Location.Should().NotBeNullOrEmpty();
             createdResult.Location.Should().BeOfType<string>();
             createdResult.Location.Should().Be($"api/videos/{ObjectId.Empty}");
@@ -169,20 +169,30 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
         {
             // arrange
             var updationVideoDto = new UpdationVideoDto();
+            var id = ObjectId.Empty.ToString();
 
             // act
-            var result = await _videoController.UpdateVideo(updationVideoDto);
+            var result = await _videoController.UpdateVideo(id, updationVideoDto);
 
             // assert
             result.Should().NotBeNull();
-            result.Should().BeOfType<NoContentResult>();
+            result.Should().BeOfType<BadRequestObjectResult>();
+
+            var badRequestResult = result.As<BadRequestObjectResult>();
+            badRequestResult.Value.Should().NotBeNull();
+            badRequestResult.Value.Should().BeOfType<ErrorDetails>();
+
+            var error = badRequestResult.Value.As<ErrorDetails>();
+            error.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+            error.Message.Should().Be("Video id is invalid.");
+            error.Details.Should().Be("Video id cannot be empty for UPDATE action.");
         }
 
         [Fact]
         public async Task DeleteVideo_InvalidId_ReturnsBadRequestObject()
         {
             // arrange
-            var id = ObjectId.Empty;
+            var id = ObjectId.Empty.ToString();
 
             // act
             var result = await _videoController.DeleteVideo(id);
@@ -210,7 +220,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
                 .Setup(x => x.GetVideoAsync(id));
 
             // act
-            var result = await _videoController.DeleteVideo(id);
+            var result = await _videoController.DeleteVideo(id.ToString());
 
             // assert
             result.Should().NotBeNull();
@@ -230,7 +240,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Controllers
         public async Task DeleteVideo_ValidState_ReturnsNoContentObject()
         {
             // arrange
-            var id = ObjectId.GenerateNewId();
+            var id = ObjectId.GenerateNewId().ToString();
 
             // act
             var result = await _videoController.DeleteVideo(id);

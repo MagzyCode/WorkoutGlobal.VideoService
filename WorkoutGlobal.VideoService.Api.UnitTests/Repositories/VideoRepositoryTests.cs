@@ -13,12 +13,9 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Repositories
     {
         private readonly VideoRepository _videoRepository;
         private readonly Mock<IConfiguration> _mockConfiguration;
-        private readonly Fixture _fixture;
 
         public VideoRepositoryTests()
         {
-            _fixture = new();
-
             _mockConfiguration = new();
             _mockConfiguration
                 .Setup(x => x[It.IsAny<string>()])
@@ -44,7 +41,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Repositories
         public async Task CreateVideoAsync_NullVideoFileParam_ReturnArgumentNullException()
         {
             // arrange
-            FormFile videoFile = null;
+            byte[] videoFile = null;
 
             // act
             var result = async () => await _videoRepository.CreateVideoAsync(null, videoFile);

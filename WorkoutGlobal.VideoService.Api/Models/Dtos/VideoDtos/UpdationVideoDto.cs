@@ -21,10 +21,5 @@ namespace WorkoutGlobal.VideoService.Api.Models.Dtos
         /// Video file name;
         /// </summary>
         public string FileName { get; set; }
-
-        /// <summary>
-        /// Video file in bytes.
-        /// </summary>
-        public IFormFile ImageFile { get; set; }
     }
 }

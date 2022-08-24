@@ -32,11 +32,10 @@ namespace WorkoutGlobal.VideoService.Api.Filters.ActionFilters
                 context.Result = new BadRequestObjectResult(new ErrorDetails()
                 {
                     StatusCode = StatusCodes.Status400BadRequest,
-                    Message = "Incoming DTO model in null.",
+                    Message = "Incoming DTO model is null.",
                     Details = "Incoming DTO model not contain any value."
                 });
-
-            if (!context.ModelState.IsValid)
+            else if (!context.ModelState.IsValid)
             {
                 var errorMessage = new StringBuilder();
 

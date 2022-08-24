@@ -23,6 +23,6 @@
         /// <summary>
         /// Image file bytes.
         /// </summary>
-        public IFormFile VideoFile { get; set; }
+        public byte[] VideoFile { get; set; }
     }
 }
