@@ -1,9 +1,16 @@
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using WorkoutGlobal.VideoService.Api.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
+});
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(setupAction =>
@@ -15,6 +22,12 @@ builder.Services.AddCors(setupAction =>
             .AllowAnyHeader());
 });
 builder.Services.ConfigureRepositories();
+builder.Services.AddFluentValidationAutoValidation()
+    .AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.ConfigureAttributes();
+
 
 var app = builder.Build();
 
