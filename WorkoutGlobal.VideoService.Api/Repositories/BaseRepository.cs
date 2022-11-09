@@ -190,7 +190,7 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
         /// <summary>
         /// Get file by id.
         /// </summary>
-        /// <param name="id">File id.</param>
+        /// <param name="id">,File id.</param>
         /// <returns>Returns bytes of file.</returns>
         public async Task<byte[]> GetFileAsync(ObjectId id)
         {
