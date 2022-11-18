@@ -21,6 +21,12 @@ namespace WorkoutGlobal.VideoService.Api.Validators
 
             RuleFor(video => video.FileName)
                 .NotEmpty();
+
+            RuleFor(video => video.CreatorId)
+                .NotEmpty();
+
+            RuleFor(video => video.CreatorFullName)
+                .NotEmpty();
         }
     }
 }

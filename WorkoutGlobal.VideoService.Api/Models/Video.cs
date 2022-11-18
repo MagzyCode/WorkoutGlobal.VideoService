@@ -32,6 +32,16 @@ namespace WorkoutGlobal.VideoService.Api.Models
         public string FileName { get; set; }
 
         /// <summary>
+        /// Video creator id.
+        /// </summary>
+        public Guid CreatorId { get; set; }
+
+        /// <summary>
+        /// Video creator full name.
+        /// </summary>
+        public string CreatorFullName { get; set; }
+
+        /// <summary>
         /// Identifier of video in GridFS.
         /// </summary>
         public ObjectId GridFsId { get; set; }
