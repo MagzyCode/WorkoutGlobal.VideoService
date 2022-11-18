@@ -23,7 +23,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Validators
             // assert
             validationResult.Should().BeOfType(typeof(ValidationResult));
             validationResult.Should().NotBeNull();
-            validationResult.Errors.Should().HaveCount(4);
+            validationResult.Errors.Should().HaveCount(6);
             validationResult.IsValid.Should().BeFalse();
         }
 
@@ -36,6 +36,8 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Validators
                 .With(video => video.Title, string.Empty)
                 .With(video => video.Description, string.Empty)
                 .With(video => video.FileName, string.Empty)
+                .With(video => video.CreatorId, Guid.Empty)
+                .With(video => video.CreatorFullName, string.Empty)
                 .Create();
 
             // act
@@ -44,7 +46,7 @@ namespace WorkoutGlobal.VideoService.Api.UnitTests.Validators
             // assert
             validationResult.Should().BeOfType(typeof(ValidationResult));
             validationResult.Should().NotBeNull();
-            validationResult.Errors.Should().HaveCount(4);
+            validationResult.Errors.Should().HaveCount(6);
             validationResult.IsValid.Should().BeFalse();
         }
 

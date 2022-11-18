@@ -21,6 +21,16 @@
         public string FileName { get; set; }
 
         /// <summary>
+        /// Creator id.
+        /// </summary>
+        public Guid CreatorId { get; set; }
+
+        /// <summary>
+        /// Creator full name
+        /// </summary>
+        public string CreatorFullName { get; set; }
+
+        /// <summary>
         /// Image file bytes.
         /// </summary>
         public byte[] VideoFile { get; set; }

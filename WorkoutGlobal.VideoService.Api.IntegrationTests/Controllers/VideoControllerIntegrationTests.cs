@@ -31,6 +31,8 @@ namespace WorkoutGlobal.VideoService.Api.IntegrationTests.Controllers
                 .With(video => video.Title, "First video title")
                 .With(video => video.Description, "First description")
                 .With(video => video.FileName, "firstVideo.mp4")
+                .With(video => video.CreatorId, Guid.NewGuid())
+                .With(video => video.CreatorFullName, "Creator")
                 .With(video => video.VideoFile, videoFile)
                 .Create();
         }
@@ -123,6 +125,9 @@ namespace WorkoutGlobal.VideoService.Api.IntegrationTests.Controllers
             result.Description.Should().Be("First description");
             result.FileName.Should().Be("firstVideo.mp4");
             result.VideoFile.Should().NotBeNullOrEmpty();
+            result.CreatorId.Should().NotBeEmpty();
+            result.CreatorFullName.Should().Be("Creator");
+
         }
 
         [Fact]
@@ -216,10 +221,14 @@ namespace WorkoutGlobal.VideoService.Api.IntegrationTests.Controllers
             var createResponse = await _appTestConnection.AppClient.PostAsJsonAsync("api/videos", _creationModel);
             var createdId = await createResponse.Content.ReadFromJsonAsync<string>();
             _appTestConnection.PurgeList.Add(createdId);
+
+            var guid = Guid.NewGuid();
             var updationModel = _fixture.Build<UpdationVideoDto>()
                     .With(video => video.Title, "Update for new title")
                     .With(video => video.Description, "Update for new description")
                     .With(video => video.FileName, "newFile.mp4")
+                    .With(video => video.CreatorId, guid)
+                    .With(video => video.CreatorFullName, "Creator2")
                     .Create();
 
             // act
@@ -237,6 +246,8 @@ namespace WorkoutGlobal.VideoService.Api.IntegrationTests.Controllers
             getResult.Title.Should().Be("Update for new title");
             getResult.Description.Should().Be("Update for new description");
             getResult.FileName.Should().Be("newFile.mp4");
+            getResult.CreatorId.Should().Be(guid);
+            getResult.CreatorFullName.Should().Be("Creator2");
         }
     }
 }

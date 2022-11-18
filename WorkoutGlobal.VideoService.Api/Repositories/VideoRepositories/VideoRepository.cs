@@ -110,6 +110,8 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
             var update = Builders<Video>.Update
                 .Set(video => video.Title, updationVideo.Title)
                 .Set(video => video.Description, updationVideo.Description)
+                .Set(video => video.CreatorId, updationVideo.CreatorId)
+                .Set(video => video.CreatorFullName, updationVideo.CreatorFullName)
                 .Set(video => video.FileName, updationVideo.FileName);
 
             await Database.GetCollection<Video>(CollectionName).UpdateOneAsync(
