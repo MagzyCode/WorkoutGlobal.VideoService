@@ -49,5 +49,13 @@ namespace WorkoutGlobal.VideoService.Api.Contracts
         /// <param name="id">,File id.</param>
         /// <returns>Returns bytes of file.</returns>
         public Task<byte[]> GetVideoFileAsync(ObjectId id);
+
+        /// <summary>
+        /// Partial update of user info in video database.
+        /// </summary>
+        /// <param name="creatorAccountId">Updated account id.</param>
+        /// <param name="updationModel">Updated model.</param>
+        /// <returns></returns>
+        public Task UpdateManyAccountVideosAsync(Guid creatorAccountId, Video updationModel);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver.GridFS;
@@ -216,6 +217,48 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
                 });
 
             await VideoRepository.DeleteVideoAsync(parsedId);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Partial update of user info in video models.
+        /// </summary>
+        /// <param name="updationCreatorId">Creator id.</param>
+        /// <param name="patchDocument">Patch document.</param>
+        /// <returns></returns>
+        /// <response code="204">Video was successfully deleted.</response>
+        /// <response code="400">Incoming id isn't valid.</response>
+        /// <response code="500">Something going wrong on server.</response>
+        [HttpPatch("{updationCreatorId}")]
+        [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCreator(Guid updationCreatorId, [FromBody] JsonPatchDocument<UpdationVideoDto> patchDocument)
+        {
+            if (patchDocument is null)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Patch document is null",
+                    Details = "Patch document for partial updaton of video model is null."
+                });
+
+            if (updationCreatorId == Guid.Empty)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Creator account id is empty.",
+                    Details = "Id of creator account cannot be empty."
+                });
+
+            // only creator name will use
+            var updationDto = new UpdationVideoDto();
+            patchDocument.ApplyTo(updationDto);
+
+            var updationModel = Mapper.Map<Video>(updationDto);
+
+            await VideoRepository.UpdateManyAccountVideosAsync(updationCreatorId, updationModel);
 
             return NoContent();
         }

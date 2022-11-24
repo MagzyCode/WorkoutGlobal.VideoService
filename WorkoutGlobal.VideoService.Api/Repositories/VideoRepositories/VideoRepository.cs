@@ -2,7 +2,7 @@
 using MongoDB.Driver;
 using WorkoutGlobal.VideoService.Api.Contracts;
 using WorkoutGlobal.VideoService.Api.Models;
-using static MongoDB.Driver.WriteConcern;
+// using static MongoDB.Driver.WriteConcern;
 
 namespace WorkoutGlobal.VideoService.Api.Repositories
 {
@@ -117,6 +117,32 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
             await Database.GetCollection<Video>(CollectionName).UpdateOneAsync(
                 filter: filter,
                 update: update);
+        }
+
+        /// <summary>
+        /// Partial update of user info in video database.
+        /// </summary>
+        /// <param name="creatorAccountId">Updated account id.</param>
+        /// <param name="updationModel">Updated model.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">Throws if account id is empty.</exception>
+        /// <exception cref="ArgumentNullException">Throws if account name is null or empty.</exception>
+        public async Task UpdateManyAccountVideosAsync(Guid creatorAccountId, Video updationModel)
+        {
+            if (creatorAccountId == Guid.Empty)
+                throw new ArgumentException("Creator id cannot be empty", nameof(creatorAccountId));
+
+            if (updationModel is null)
+                throw new ArgumentNullException(nameof(updationModel), "Creator name cannot be null or empty");
+
+            var filter = Builders<Video>.Filter.Eq("CreatorId", creatorAccountId);
+
+            var updateManyQuery = Builders<Video>.Update
+                .Set(video => video.CreatorFullName, updationModel.CreatorFullName);
+
+            await Database.GetCollection<Video>(CollectionName).UpdateManyAsync(
+                filter: filter,
+                update: updateManyQuery);
         }
     }
 }
