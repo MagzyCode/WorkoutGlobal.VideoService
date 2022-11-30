@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
-using MongoDB.Driver.GridFS;
 using WorkoutGlobal.VideoService.Api.Contracts;
 using WorkoutGlobal.VideoService.Api.Filters.ActionFilters;
 using WorkoutGlobal.VideoService.Api.Models;
@@ -27,7 +26,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         /// <param name="videoRepository">Video repository instance.</param>
         /// <param name="mapper">AutoMapper instance.</param>
         public VideoController(
-            IVideoRepository videoRepository, 
+            IVideoRepository videoRepository,
             IMapper mapper)
         {
             VideoRepository = videoRepository;
@@ -40,7 +39,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         public IVideoRepository VideoRepository
         {
             get => _videoRepository;
-            private set => _videoRepository = value 
+            private set => _videoRepository = value
                 ?? throw new NullReferenceException(nameof(value));
         }
 
@@ -50,7 +49,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         public IMapper Mapper
         {
             get => _mapper;
-            private set => _mapper = value 
+            private set => _mapper = value
                 ?? throw new NullReferenceException(nameof(value));
         }
 
@@ -227,7 +226,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         /// <param name="updationCreatorId">Creator id.</param>
         /// <param name="patchDocument">Patch document.</param>
         /// <returns></returns>
-        /// <response code="204">Video was successfully deleted.</response>
+        /// <response code="204">Video was successfully patched.</response>
         /// <response code="400">Incoming id isn't valid.</response>
         /// <response code="500">Something going wrong on server.</response>
         [HttpPatch("{updationCreatorId}")]
@@ -259,6 +258,33 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
             var updationModel = Mapper.Map<Video>(updationDto);
 
             await VideoRepository.UpdateManyAccountVideosAsync(updationCreatorId, updationModel);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Delete account videos.
+        /// </summary>
+        /// <param name="deletionAccountId">Deleted account id.</param>
+        /// <returns></returns>
+        /// <response code="204">Videos was successfully deleted.</response>
+        /// <response code="400">Incoming id isn't valid.</response>
+        /// <response code="500">Something going wrong on server.</response>
+        [HttpDelete("creators/{deletionAccountId}")]
+        [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteUserVideos(Guid deletionAccountId)
+        {
+            if (deletionAccountId == Guid.Empty)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Creator account id is empty.",
+                    Details = "Id of creator account cannot be empty."
+                });
+
+            await VideoRepository.DeleteUserVideosAsync(deletionAccountId);
 
             return NoContent();
         }

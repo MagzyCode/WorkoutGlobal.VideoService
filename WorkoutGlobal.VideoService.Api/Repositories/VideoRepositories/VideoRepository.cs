@@ -1,7 +1,9 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Collections;
 using WorkoutGlobal.VideoService.Api.Contracts;
 using WorkoutGlobal.VideoService.Api.Models;
+using static MongoDB.Driver.WriteConcern;
 // using static MongoDB.Driver.WriteConcern;
 
 namespace WorkoutGlobal.VideoService.Api.Repositories
@@ -143,6 +145,22 @@ namespace WorkoutGlobal.VideoService.Api.Repositories
             await Database.GetCollection<Video>(CollectionName).UpdateManyAsync(
                 filter: filter,
                 update: updateManyQuery);
+        }
+
+        /// <summary>
+        /// Delete all deleted user videos.
+        /// </summary>
+        /// <param name="userAccountId">Deletion account id.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">Throws id creator id is empty.</exception>
+        public async Task DeleteUserVideosAsync(Guid userAccountId)
+        {
+            if (userAccountId == Guid.Empty)
+                throw new ArgumentException("Creator id cannot be empty", nameof(userAccountId));
+
+            var filter = Builders<Video>.Filter.Eq("CreatorId", userAccountId);
+
+            await Database.GetCollection<Video>(CollectionName).DeleteManyAsync(filter);
         }
     }
 }

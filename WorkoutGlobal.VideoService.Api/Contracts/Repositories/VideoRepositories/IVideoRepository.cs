@@ -57,5 +57,12 @@ namespace WorkoutGlobal.VideoService.Api.Contracts
         /// <param name="updationModel">Updated model.</param>
         /// <returns></returns>
         public Task UpdateManyAccountVideosAsync(Guid creatorAccountId, Video updationModel);
+
+        /// <summary>
+        /// Delete all deleted user videos.
+        /// </summary>
+        /// <param name="userAccountId">Deletion account id.</param>
+        /// <returns></returns>
+        public Task DeleteUserVideosAsync(Guid userAccountId);
     }
 }
