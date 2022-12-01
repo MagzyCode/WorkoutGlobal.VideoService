@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using MassTransit;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
+using WorkoutGlobal.Shared.Messages;
 using WorkoutGlobal.VideoService.Api.Contracts;
 using WorkoutGlobal.VideoService.Api.Filters.ActionFilters;
 using WorkoutGlobal.VideoService.Api.Models;
@@ -25,13 +27,21 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         /// </summary>
         /// <param name="videoRepository">Video repository instance.</param>
         /// <param name="mapper">AutoMapper instance.</param>
+        /// <param name="publisher">Message publisher.</param>
         public VideoController(
             IVideoRepository videoRepository,
-            IMapper mapper)
+            IMapper mapper,
+            IPublishEndpoint publisher)
         {
             VideoRepository = videoRepository;
             Mapper = mapper;
+            Publisher = publisher;  
         }
+
+        /// <summary>
+        /// Service bus.
+        /// </summary>
+        public IPublishEndpoint Publisher { get; private set; }
 
         /// <summary>
         /// Authentication repository property.
@@ -178,6 +188,12 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
 
             await VideoRepository.UpdateVideoAsync(video);
 
+            await Publisher.Publish<UpdateVideoMessage>(
+                message: new(
+                    UpdationId: id,
+                    Title: video.Title,
+                    Description: video.Description));
+
             return NoContent();
         }
 
@@ -217,6 +233,8 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
 
             await VideoRepository.DeleteVideoAsync(parsedId);
 
+            await Publisher.Publish<DeleteVideoMessage>(message: new(id));
+
             return NoContent();
         }
 
@@ -233,7 +251,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
         [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateCreator(Guid updationCreatorId, [FromBody] JsonPatchDocument<UpdationVideoDto> patchDocument)
+        public async Task<IActionResult> UpdateCreator(Guid updationCreatorId, [FromBody] object patchDocument)
         {
             if (patchDocument is null)
                 return BadRequest(new ErrorDetails()
@@ -253,7 +271,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
 
             // only creator name will use
             var updationDto = new UpdationVideoDto();
-            patchDocument.ApplyTo(updationDto);
+            // patchDocument.ApplyTo(updationDto);
 
             var updationModel = Mapper.Map<Video>(updationDto);
 
