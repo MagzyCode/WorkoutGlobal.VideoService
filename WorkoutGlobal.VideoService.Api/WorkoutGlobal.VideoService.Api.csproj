@@ -11,6 +11,10 @@
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="FluentValidation" Version="11.2.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.2.1" />
+    <PackageReference Include="MassTransit" Version="8.0.8" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="7.3.1" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.8" />
     <PackageReference Include="MongoDB.Analyzer" Version="1.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.17.1" />
@@ -20,6 +24,10 @@
 
   <ItemGroup>
     <Folder Include="Repositories\VideoRepositories\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared messages\WorkoutGlobal.Shared\WorkoutGlobal.Shared.Messages\WorkoutGlobal.Shared.Messages.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using MassTransit;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
-using MongoDB.Driver.GridFS;
+using WorkoutGlobal.Shared.Messages;
 using WorkoutGlobal.VideoService.Api.Contracts;
 using WorkoutGlobal.VideoService.Api.Filters.ActionFilters;
 using WorkoutGlobal.VideoService.Api.Models;
@@ -25,13 +27,21 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         /// </summary>
         /// <param name="videoRepository">Video repository instance.</param>
         /// <param name="mapper">AutoMapper instance.</param>
+        /// <param name="publisher">Message publisher.</param>
         public VideoController(
-            IVideoRepository videoRepository, 
-            IMapper mapper)
+            IVideoRepository videoRepository,
+            IMapper mapper,
+            IPublishEndpoint publisher)
         {
             VideoRepository = videoRepository;
             Mapper = mapper;
+            Publisher = publisher;  
         }
+
+        /// <summary>
+        /// Service bus.
+        /// </summary>
+        public IPublishEndpoint Publisher { get; private set; }
 
         /// <summary>
         /// Authentication repository property.
@@ -39,7 +49,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         public IVideoRepository VideoRepository
         {
             get => _videoRepository;
-            private set => _videoRepository = value 
+            private set => _videoRepository = value
                 ?? throw new NullReferenceException(nameof(value));
         }
 
@@ -49,7 +59,7 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
         public IMapper Mapper
         {
             get => _mapper;
-            private set => _mapper = value 
+            private set => _mapper = value
                 ?? throw new NullReferenceException(nameof(value));
         }
 
@@ -80,12 +90,17 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
             var video = await VideoRepository.GetVideoAsync(parsedId);
 
             if (video is null)
+            {
+                await Publisher.Publish<CreateLogMessage>(
+                    message: new($"Video cannot be found with given id: {id}", "Info"));
+
                 return NotFound(new ErrorDetails()
                 {
                     StatusCode = StatusCodes.Status404NotFound,
                     Message = "Video not exists.",
                     Details = "Video with given id not found in system."
                 });
+            }
 
             var videoDto = Mapper.Map<VideoDto>(video);
 
@@ -178,6 +193,12 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
 
             await VideoRepository.UpdateVideoAsync(video);
 
+            await Publisher.Publish<UpdateVideoMessage>(
+                message: new(
+                    UpdationId: id,
+                    Title: video.Title,
+                    Description: video.Description));
+
             return NoContent();
         }
 
@@ -216,6 +237,77 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
                 });
 
             await VideoRepository.DeleteVideoAsync(parsedId);
+
+            await Publisher.Publish<DeleteVideoMessage>(message: new(id));
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Partial update of user info in video models.
+        /// </summary>
+        /// <param name="updationCreatorId">Creator id.</param>
+        /// <param name="patchDocument">Patch document.</param>
+        /// <returns></returns>
+        /// <response code="204">Video was successfully patched.</response>
+        /// <response code="400">Incoming id isn't valid.</response>
+        /// <response code="500">Something going wrong on server.</response>
+        [HttpPatch("{updationCreatorId}")]
+        [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCreator(Guid updationCreatorId, [FromBody] object patchDocument)
+        {
+            if (patchDocument is null)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Patch document is null",
+                    Details = "Patch document for partial updaton of video model is null."
+                });
+
+            if (updationCreatorId == Guid.Empty)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Creator account id is empty.",
+                    Details = "Id of creator account cannot be empty."
+                });
+
+            // only creator name will use
+            var updationDto = new UpdationVideoDto();
+            // patchDocument.ApplyTo(updationDto);
+
+            var updationModel = Mapper.Map<Video>(updationDto);
+
+            await VideoRepository.UpdateManyAccountVideosAsync(updationCreatorId, updationModel);
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Delete account videos.
+        /// </summary>
+        /// <param name="deletionAccountId">Deleted account id.</param>
+        /// <returns></returns>
+        /// <response code="204">Videos was successfully deleted.</response>
+        /// <response code="400">Incoming id isn't valid.</response>
+        /// <response code="500">Something going wrong on server.</response>
+        [HttpDelete("creators/{deletionAccountId}")]
+        [ProducesResponseType(type: typeof(int), statusCode: StatusCodes.Status204NoContent)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(type: typeof(ErrorDetails), statusCode: StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteUserVideos(Guid deletionAccountId)
+        {
+            if (deletionAccountId == Guid.Empty)
+                return BadRequest(new ErrorDetails()
+                {
+                    StatusCode = StatusCodes.Status400BadRequest,
+                    Message = "Creator account id is empty.",
+                    Details = "Id of creator account cannot be empty."
+                });
+
+            await VideoRepository.DeleteUserVideosAsync(deletionAccountId);
 
             return NoContent();
         }

@@ -1,4 +1,5 @@
-﻿using WorkoutGlobal.VideoService.Api.Contracts;
+﻿using MassTransit;
+using WorkoutGlobal.VideoService.Api.Contracts;
 using WorkoutGlobal.VideoService.Api.Filters.ActionFilters;
 using WorkoutGlobal.VideoService.Api.Repositories;
 
@@ -25,6 +26,23 @@ namespace WorkoutGlobal.VideoService.Api.Extensions
         public static void ConfigureAttributes(this IServiceCollection services)
         {
             services.AddScoped<ModelValidationFilterAttribute>();
+        }
+
+        /// <summary>
+        /// Configure MassTransit.
+        /// </summary>
+        /// <param name="services">Project services.</param>
+        /// <param name="configuration">Project configuration.</param>
+        public static void ConfigureMassTransit(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddMassTransit(options =>
+            {
+                options.UsingRabbitMq((ctx, cfg) =>
+                {
+                    cfg.Host(configuration["MassTransitSettings:Host"]);
+                });
+            });
+            services.AddMassTransitHostedService();
         }
     }
 }
