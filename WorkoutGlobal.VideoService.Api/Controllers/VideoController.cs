@@ -90,12 +90,17 @@ namespace WorkoutGlobal.VideoService.Api.Controllers
             var video = await VideoRepository.GetVideoAsync(parsedId);
 
             if (video is null)
+            {
+                await Publisher.Publish<CreateLogMessage>(
+                    message: new($"Video cannot be found with given id: {id}", "Info"));
+
                 return NotFound(new ErrorDetails()
                 {
                     StatusCode = StatusCodes.Status404NotFound,
                     Message = "Video not exists.",
                     Details = "Video with given id not found in system."
                 });
+            }
 
             var videoDto = Mapper.Map<VideoDto>(video);
 
